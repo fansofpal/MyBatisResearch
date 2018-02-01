@@ -1,0 +1,50 @@
+@startuml
+interface SqlSessionFactory{
+    SqlSession openSession(xxx);
+}
+class DefaultSqlSessionFactory{
+    Configuration configuration;
+    SqlSession openSession(configuration, executor);
+}
+class Configuration{
+    Collection xxx;//配置节点
+    Executor newExecutor(Transaction transaction, ExecutorType executorType);
+    StatementHandler newStatementHandler(xxx);
+    ResultSetHandler newResultSetHandler(xxx);
+    ParameterHandler newParameterHandler(xxx);
+}
+class DefaultSqlSession{
+    Configuration configuration;//封装mapper中的节点
+    Executor executor;//执行器，生成sql，获得查询结果
+    List<E> selectList(xxx);
+}
+class CachingExecutor{
+    Executor delegate;//这才是真正的执行器
+    List<E> query(xxx);//执行delegate里的query方法
+}
+class SimpleExecutor{
+    //ms中包含configuration;configuration中生成statementHandler;()
+    List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql);
+}
+class PreparedStatementHandler{
+    TypeHandlerRegistry typeHandlerRegistry;
+    ResultSetHandler resultSetHandler;//这三个属性都是通过configuration生成
+    ParameterHandler parameterHandler;
+    query(Statement statement, ResultHandler resultHandler);
+}
+class DefaultResultSetHandler{
+
+}
+class DefaultParameterHandler{
+
+}
+
+SqlSessionFactory <|.. DefaultSqlSessionFactory
+DefaultSqlSessionFactory o-- Configuration
+DefaultSqlSession <.. DefaultSqlSessionFactory
+DefaultSqlSession  --> CachingExecutor
+CachingExecutor --> SimpleExecutor
+SimpleExecutor ..> PreparedStatementHandler
+PreparedStatementHandler --> DefaultResultSetHandler
+PreparedStatementHandler --> DefaultParameterHandler
+@enduml

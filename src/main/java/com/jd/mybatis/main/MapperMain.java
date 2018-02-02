@@ -6,6 +6,9 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.Transaction;
+import org.apache.ibatis.transaction.TransactionFactory;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -36,10 +39,20 @@ public class MapperMain {
         Map<String,Object> params = new HashMap<String,Object>();
         int salary = 10000;
         params.put("min_salary",salary);
-        //a.查询工资低于10000的员工
-//        List<Employee> result = sqlSession.selectList("EmployeesMapper.selectByMinSalary",params);
-        EmployeeService service = sqlSession.getMapper(EmployeeService.class);
-        List<Employee> result = service.selectByMinSalary(params);
-        System.out.println("薪资低于"+salary+"的员工数："+result.size());
+        EmployeeService service = null;
+        //可开启事务
+        TransactionFactory transactionFactory = new JdbcTransactionFactory();
+        Transaction newTransaction=transactionFactory.newTransaction(sqlSession.getConnection());
+        try{
+            //a.查询工资低于10000的员工
+            service = sqlSession.getMapper(EmployeeService.class);
+            List<Employee> result = service.selectByMinSalary(params);
+            System.out.println("薪资低于"+salary+"的员工数："+result.size());
+
+        }catch (Exception e){
+            newTransaction.rollback();
+        }finally {
+            newTransaction.close();
+        }
     }
 }
